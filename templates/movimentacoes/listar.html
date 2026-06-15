@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block conteudo %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Movimentações</h2>
+    <div>
+        <a href="/movimentacoes/entrada" class="btn btn-success me-2">
+            <i class="bi bi-arrow-down-circle"></i> Nova Entrada
+        </a>
+        <a href="/movimentacoes/saida" class="btn btn-warning">
+            <i class="bi bi-arrow-up-circle"></i> Nova Saída
+        </a>
+    </div>
+</div>
+
+{% if movimentacoes %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Fornecedor</th>
+                    <th>NF</th>
+                    <th>Qtd</th>
+                    <th>Preço Unit.</th>
+                    <th>Responsável</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in movimentacoes %}
+                <tr>
+                    <td>
+                        {% if m['tipo'] == 'E' %}
+                            <span class="badge bg-success">Entrada</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Saída</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ m['data'] }}</td>
+                    <td>{{ m['produto_nome'] }}</td>
+                    <td>{{ m['fornecedor_nome'] or '—' }}</td>
+                    <td>{{ m['numero_nf'] or '—' }}</td>
+                    <td>{{ m['quantidade'] }}</td>
+                    <td>
+                        {% if m['preco_unitario'] %}
+                            R$ {{ "%.2f"|format(m['preco_unitario']) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ m['responsavel'] or '—' }}</td>
+                    <td>{{ m['motivo'] or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhuma movimentação registrada ainda.</div>
+{% endif %}
+
+{% endblock %}

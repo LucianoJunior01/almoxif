@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block conteudo %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Fornecedores</h2>
+    <a href="/fornecedores/novo" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Novo Fornecedor
+    </a>
+</div>
+
+{% if fornecedores %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nome</th>
+                    <th>CNPJ</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fornecedores %}
+                <tr>
+                    <td>{{ f['nome'] }}</td>
+                    <td>{{ f['cnpj'] }}</td>
+                    <td>{{ f['telefone'] }}</td>
+                    <td>{{ f['email'] }}</td>
+                    <td>
+                        <a href="/fornecedores/excluir/{{ f['id'] }}"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Excluir este fornecedor?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhum fornecedor cadastrado ainda.</div>
+{% endif %}
+
+{% endblock %}

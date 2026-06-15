@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block conteudo %}
+
+<h2 class="mb-4">Dashboard</h2>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-archive"></i> Total de Produtos</h5>
+                <h2>{{ total_produtos }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Estoque Baixo</h5>
+                <h2>{{ estoque_baixo }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-arrow-down-circle"></i> Entradas Hoje</h5>
+                <h2>{{ entradas_hoje }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-arrow-up-circle"></i> Saídas Hoje</h5>
+                <h2>{{ saidas_hoje }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

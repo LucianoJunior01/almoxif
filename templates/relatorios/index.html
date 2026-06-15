@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block conteudo %}
+
+<h2 class="mb-4"><i class="bi bi-bar-chart"></i> Relatórios</h2>
+
+<!-- Cards de resumo -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-archive"></i> Total de Produtos</h6>
+                <h3>{{ total_produtos }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-cash"></i> Valor Total em Estoque</h6>
+                <h3>R$ {{ "%.2f"|format(valor_total_estoque) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-arrow-down-circle"></i> Total Entradas</h6>
+                <h3>{{ total_entradas }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-arrow-up-circle"></i> Total Saídas</h6>
+                <h3>{{ total_saidas }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estoque baixo -->
+{% if estoque_baixo %}
+<div class="card shadow-sm mb-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <i class="bi bi-exclamation-triangle"></i> Produtos com Estoque Abaixo do Mínimo
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Estoque Atual</th>
+                    <th>Estoque Mínimo</th>
+                    <th>Unidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in estoque_baixo %}
+                <tr class="table-danger">
+                    <td>{{ p['codigo'] }}</td>
+                    <td>{{ p['nome'] }}</td>
+                    <td>{{ p['estoque_atual'] }}</td>
+                    <td>{{ p['estoque_minimo'] }}</td>
+                    <td>{{ p['unidade'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Posição do estoque -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <i class="bi bi-list-ul"></i> Posição Atual do Estoque
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Estoque</th>
+                    <th>Unidade</th>
+                    <th>Preço Médio</th>
+                    <th>Valor Total</th>
+                    <th>Origem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in produtos %}
+                <tr class="{{ 'table-danger' if p['estoque_atual'] < p['estoque_minimo'] else '' }}">
+                    <td>{{ p['codigo'] }}</td>
+                    <td>{{ p['nome'] }}</td>
+                    <td>{{ p['categoria'] }}</td>
+                    <td>{{ p['estoque_atual'] }}</td>
+                    <td>{{ p['unidade'] }}</td>
+                    <td>R$ {{ "%.2f"|format(p['preco_medio']) }}</td>
+                    <td>R$ {{ "%.2f"|format(p['valor_total']) }}</td>
+                    <td>
+                        {% if p['nacional'] == 'S' %}
+                            <span class="badge bg-success">Nacional</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                Importado — {{ p['pais_origem'] }} ({{ p['lead_time_dias'] }} dias)
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Filtro por período -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <i class="bi bi-calendar-range"></i> Movimentações por Período
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Data Início</label>
+                <input type="date" name="data_inicio" class="form-control" value="{{ data_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Data Fim</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Fornecedor</th>
+                    <th>NF</th>
+                    <th>Qtd</th>
+                    <th>Preço Unit.</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in movimentacoes %}
+                <tr>
+                    <td>
+                        {% if m['tipo'] == 'E' %}
+                            <span class="badge bg-success">Entrada</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Saída</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ m['data'] }}</td>
+                    <td>{{ m['produto_nome'] }}</td>
+                    <td>{{ m['fornecedor_nome'] or '—' }}</td>
+                    <td>{{ m['numero_nf'] or '—' }}</td>
+                    <td>{{ m['quantidade'] }}</td>
+                    <td>
+                        {% if m['preco_unitario'] %}
+                            R$ {{ "%.2f"|format(m['preco_unitario']) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ m['responsavel'] or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
