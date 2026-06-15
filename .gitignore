@@ -1,0 +1,5 @@
+almoxarifado.db
+__pycache__/
+*.pyc
+.env
+routes/relatorio.py
