@@ -23,7 +23,7 @@ pip install -r requirements.txt
 python app.py
 
 ### 4. Acesse no navegador
-http://localhost:8080
+http://127.0.0.1:8080
 
 ## Funcionalidades
 - Cadastro de Produtos
