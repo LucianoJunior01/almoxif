@@ -1,25 +1,29 @@
-import sqlite3
+import psycopg2
+import psycopg2.extras
+import os
 
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:BCoZxyTplmCsRmCEgmNynTDVojgUXKGR@thomas.proxy.rlwy.net:59210/railway')
 def conectar():
-    conn = sqlite3.connect('almoxarifado.db')
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 def criar_tabelas():
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.executescript('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS fornecedor (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL,
             cnpj TEXT,
             telefone TEXT,
             email TEXT
-        );
+        )
+    ''')
 
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS produto (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL,
             codigo TEXT UNIQUE NOT NULL,
             categoria TEXT,
@@ -30,10 +34,12 @@ def criar_tabelas():
             nacional TEXT DEFAULT 'S',
             pais_origem TEXT,
             lead_time_dias INTEGER DEFAULT 0
-        );
+        )
+    ''')
 
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS movimentacao (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             tipo TEXT NOT NULL,
             produto_id INTEGER NOT NULL,
             fornecedor_id INTEGER,
@@ -45,10 +51,11 @@ def criar_tabelas():
             responsavel TEXT,
             FOREIGN KEY (produto_id) REFERENCES produto(id),
             FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id)
-        );
+        )
     ''')
 
     conn.commit()
+    cursor.close()
     conn.close()
 
 if __name__ == '__main__':

@@ -1,19 +1,23 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from database import conectar
 from datetime import date
+import psycopg2.extras
 
 movimentacoes_bp = Blueprint('movimentacoes', __name__)
 
 @movimentacoes_bp.route('/movimentacoes')
 def listar():
     conn = conectar()
-    movimentacoes = conn.execute('''
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute('''
         SELECT m.*, p.nome as produto_nome, f.nome as fornecedor_nome
         FROM movimentacao m
         JOIN produto p ON m.produto_id = p.id
         LEFT JOIN fornecedor f ON m.fornecedor_id = f.id
         ORDER BY m.id DESC
-    ''').fetchall()
+    ''')
+    movimentacoes = cursor.fetchall()
+    cursor.close()
     conn.close()
     return render_template('movimentacoes/listar.html', movimentacoes=movimentacoes)
 
@@ -24,12 +28,11 @@ def entrada():
         produto_id = request.form['produto_id']
         quantidade = float(request.form['quantidade'])
         preco_unitario = float(request.form['preco_unitario'])
-
-        # Registra a movimentação
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
             INSERT INTO movimentacao 
             (tipo, produto_id, fornecedor_id, quantidade, preco_unitario, numero_nf, data, motivo, responsavel)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             'E',
             produto_id,
@@ -41,21 +44,23 @@ def entrada():
             request.form['motivo'],
             request.form['responsavel']
         ))
-
-        # Atualiza o estoque do produto
-        conn.execute('''
+        cursor.execute('''
             UPDATE produto 
-            SET estoque_atual = estoque_atual + ?,
-                preco_medio = ?
-            WHERE id = ?
+            SET estoque_atual = estoque_atual + %s,
+                preco_medio = %s
+            WHERE id = %s
         ''', (quantidade, preco_unitario, produto_id))
-
         conn.commit()
+        cursor.close()
         conn.close()
         return redirect(url_for('movimentacoes.listar'))
 
-    produtos = conn.execute('SELECT * FROM produto ORDER BY nome').fetchall()
-    fornecedores = conn.execute('SELECT * FROM fornecedor ORDER BY nome').fetchall()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute('SELECT * FROM produto ORDER BY nome')
+    produtos = cursor.fetchall()
+    cursor.execute('SELECT * FROM fornecedor ORDER BY nome')
+    fornecedores = cursor.fetchall()
+    cursor.close()
     conn.close()
     return render_template('movimentacoes/entrada.html',
         produtos=produtos,
@@ -69,12 +74,11 @@ def saida():
     if request.method == 'POST':
         produto_id = request.form['produto_id']
         quantidade = float(request.form['quantidade'])
-
-        # Registra a movimentação
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
             INSERT INTO movimentacao 
             (tipo, produto_id, quantidade, data, motivo, responsavel)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
         ''', (
             'S',
             produto_id,
@@ -83,19 +87,20 @@ def saida():
             request.form['motivo'],
             request.form['responsavel']
         ))
-
-        # Atualiza o estoque do produto
-        conn.execute('''
+        cursor.execute('''
             UPDATE produto 
-            SET estoque_atual = estoque_atual - ?
-            WHERE id = ?
+            SET estoque_atual = estoque_atual - %s
+            WHERE id = %s
         ''', (quantidade, produto_id))
-
         conn.commit()
+        cursor.close()
         conn.close()
         return redirect(url_for('movimentacoes.listar'))
 
-    produtos = conn.execute('SELECT * FROM produto ORDER BY nome').fetchall()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute('SELECT * FROM produto ORDER BY nome')
+    produtos = cursor.fetchall()
+    cursor.close()
     conn.close()
     return render_template('movimentacoes/saida.html',
         produtos=produtos,

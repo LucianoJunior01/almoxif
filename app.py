@@ -4,6 +4,8 @@ from routes.produtos import produtos_bp
 from routes.fornecedores import fornecedores_bp
 from routes.movimentacoes import movimentacoes_bp
 from routes.relatorios import relatorios_bp
+import psycopg2.extras
+from datetime import date
 
 app = Flask(__name__)
 app.register_blueprint(produtos_bp)
@@ -15,22 +17,25 @@ criar_tabelas()
 @app.route('/')
 def dashboard():
     conn = conectar()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    total_produtos = cursor.execute('SELECT COUNT(*) FROM produto').fetchone()[0]
-    estoque_baixo = cursor.execute(
-        'SELECT COUNT(*) FROM produto WHERE estoque_atual < estoque_minimo'
-    ).fetchone()[0]
+    cursor.execute('SELECT COUNT(*) as total FROM produto')
+    total_produtos = cursor.fetchone()['total']
 
-    hoje = __import__('datetime').date.today().isoformat()
-    entradas_hoje = cursor.execute(
-        'SELECT COUNT(*) FROM movimentacao WHERE tipo="E" AND data=?', (hoje,)
-    ).fetchone()[0]
-    saidas_hoje = cursor.execute(
-        'SELECT COUNT(*) FROM movimentacao WHERE tipo="S" AND data=?', (hoje,)
-    ).fetchone()[0]
+    cursor.execute('SELECT COUNT(*) as total FROM produto WHERE estoque_atual < estoque_minimo')
+    estoque_baixo = cursor.fetchone()['total']
 
+    hoje = date.today().isoformat()
+
+    cursor.execute('SELECT COUNT(*) as total FROM movimentacao WHERE tipo=%s AND data=%s', ('E', hoje))
+    entradas_hoje = cursor.fetchone()['total']
+
+    cursor.execute('SELECT COUNT(*) as total FROM movimentacao WHERE tipo=%s AND data=%s', ('S', hoje))
+    saidas_hoje = cursor.fetchone()['total']
+
+    cursor.close()
     conn.close()
+
     return render_template('dashboard.html',
         total_produtos=total_produtos,
         estoque_baixo=estoque_baixo,

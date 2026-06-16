@@ -6,7 +6,10 @@ produtos_bp = Blueprint('produtos', __name__)
 @produtos_bp.route('/produtos')
 def listar():
     conn = conectar()
-    produtos = conn.execute('SELECT * FROM produto ORDER BY nome').fetchall()
+    cursor = conn.cursor(cursor_factory=__import__('psycopg2').extras.RealDictCursor)
+    cursor.execute('SELECT * FROM produto ORDER BY nome')
+    produtos = cursor.fetchall()
+    cursor.close()
     conn.close()
     return render_template('produtos/listar.html', produtos=produtos)
 
@@ -14,10 +17,11 @@ def listar():
 def novo():
     if request.method == 'POST':
         conn = conectar()
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
             INSERT INTO produto 
             (nome, codigo, categoria, unidade, estoque_atual, estoque_minimo, preco_medio, nacional, pais_origem, lead_time_dias)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             request.form['nome'],
             request.form['codigo'],
@@ -31,6 +35,7 @@ def novo():
             request.form['lead_time_dias']
         ))
         conn.commit()
+        cursor.close()
         conn.close()
         return redirect(url_for('produtos.listar'))
     return render_template('produtos/novo.html')
@@ -38,7 +43,9 @@ def novo():
 @produtos_bp.route('/produtos/excluir/<int:id>')
 def excluir(id):
     conn = conectar()
-    conn.execute('DELETE FROM produto WHERE id = ?', (id,))
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM produto WHERE id = %s', (id,))
     conn.commit()
+    cursor.close()
     conn.close()
     return redirect(url_for('produtos.listar'))
